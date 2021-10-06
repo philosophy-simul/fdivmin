@@ -18,7 +18,7 @@ page_icon="🔦",
 layout="wide"
 )
 
-)
+
 def random_distrib(n_prop=3,mest=4):
     n=2**n_prop
     a=[]
