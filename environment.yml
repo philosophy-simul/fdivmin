@@ -1,0 +1,6 @@
+name: fdivminim
+dependencies:
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
