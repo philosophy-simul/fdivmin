@@ -12,16 +12,23 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
+st.set_page_config(
+page_title="f-div minimizer",
+page_icon="🔦",
+layout="wide"
+)
+
+)
 def random_distrib(n_prop=3,mest=4):
     n=2**n_prop
     a=[]
     for i in range(n):
         a.append(np.random.uniform(0,1))
     a=[i/sum(a) for i in a]
-            
+
     a=[0.0 if "e" in str(i) else float(str(i)[:mest]) for i in a]
     dif=1-sum(a)
-    a[int(np.random.choice(n,1)[0])]+=dif    
+    a[int(np.random.choice(n,1)[0])]+=dif
     return a
 
 def chain_distrib(a=.7,p1=.8,q1=.4,p2=.6,q2=.3):
@@ -62,7 +69,7 @@ def collider_distrib(a=.7,b=.6,p1=.8,p2=.4,p3=.6,p4=.3):
         (1-a)*(1-b)*p4,
         (1-a)*(1-b)*(1-p4)
         ]
-    
+
 def f_of_x(x_state,divergence="kl"):
     if divergence == "kl":
         return x_state * np.log(x_state)
@@ -72,7 +79,7 @@ def f_of_x(x_state,divergence="kl"):
         return -np.log(x_state)
     if divergence=="chisq":
         return (x_state - 1)**2
-    
+
 def update_by_minimization(prior="rand",posterior_a_b_c_if_a_c_if_b_c_if_a_c=[None, None,1,1,None,None],printing=1,plotting=1,rounding="Yes",decimround=3):
     # in case of skiing trip: assume a->b->c with a: exam, b: skiing, c: buying outfit
     # posterior_a_b_c_if_a_c_if_b_c_if_a_c is a list of fixed posterior a, b, c, if a then b, if b then c, if a then c. If None, then the parameter is not fixed in posterior.
@@ -80,7 +87,7 @@ def update_by_minimization(prior="rand",posterior_a_b_c_if_a_c_if_b_c_if_a_c=[No
         prior = random_distrib(3,4)
         while 0 in prior:
             prior = random_distrib(3,4)
-    
+
     divergence="kl"
     divergence2="hel"
     divergence3="ikl"
@@ -92,7 +99,7 @@ def update_by_minimization(prior="rand",posterior_a_b_c_if_a_c_if_b_c_if_a_c=[No
 
 
     bnds = [(0+1e-320, 1) for i in range(8)] # open lower bound
-    
+
     a=posterior_a_b_c_if_a_c_if_b_c_if_a_c[0]
     b=posterior_a_b_c_if_a_c_if_b_c_if_a_c[1]
     c=posterior_a_b_c_if_a_c_if_b_c_if_a_c[2]
@@ -113,7 +120,7 @@ def update_by_minimization(prior="rand",posterior_a_b_c_if_a_c_if_b_c_if_a_c=[No
         cons.append({'type': 'eq', 'fun': lambda x:  x[0] + x[4] - if_b_then_c*(x[0] + x[1] + x[4] + x[5])})
     if if_a_then_c!=None:
         cons.append({'type': 'eq', 'fun': lambda x:  x[0] + x[2] - if_a_then_c*(x[0] + x[2] + x[4] + x[6])})
-    
+
 
 
 
@@ -132,15 +139,15 @@ def update_by_minimization(prior="rand",posterior_a_b_c_if_a_c_if_b_c_if_a_c=[No
         bdats=[0,prior[0]+prior[1]+prior[4]+prior[5],res1.x[0]+res1.x[1]+res1.x[4]+res1.x[5],res2.x[0]+res2.x[1]+res2.x[4]+res2.x[5],res3.x[0]+res3.x[1]+res3.x[4]+res3.x[5],res4.x[0]+res4.x[1]+res4.x[4]+res4.x[5]]
         cdats=[0,prior[0]+prior[2]+prior[4]+prior[6],res1.x[0]+res1.x[2]+res1.x[4]+res1.x[6],res2.x[0]+res2.x[2]+res2.x[4]+res2.x[6],res3.x[0]+res3.x[2]+res3.x[4]+res3.x[6],res4.x[0]+res4.x[2]+res4.x[4]+res4.x[6]]
 
-        
+
         if rounding=="yes":
             dats=np.vstack([labs,np.round(np.array(prior),decimround),np.round(res1.x,decimround),np.round(res2.x,decimround),np.round(res3.x,decimround),np.round(res4.x,decimround)]).T
             dats=np.vstack([tablelabs,dats,np.round(adats,decimround),np.round(bdats,decimround),np.round(cdats,decimround),["success?","",str(res1.success),str(res2.success),str(res3.success),str(res4.success)]])
-            
+
         else:
             dats=np.vstack([labs,np.array(prior),res1.x,res2.x,res3.x,res4.x]).T
             dats=np.vstack([tablelabs,dats,adats,bdats,cdats,["success?","",str(res1.success),str(res2.success),str(res3.success),str(res4.success)]])
-        
+
         dats[-4][0]="a"
         dats[-3][0]="b"
         dats[-2][0]="c"
@@ -325,7 +332,7 @@ if networktype == "collider":
         if number_p41=="yes":
             number_p4 = st.slider("Choose value:",0.0,1.0,key="32")
         else:
-            number_p4=np.random.random()     
+            number_p4=np.random.random()
         st.write("pr(p4)="+str(number_p4)[:6])
 constraintz=[]
 col1a,col2a,col3a,col4a,col5a,col6a = st.columns(6)
@@ -412,12 +419,10 @@ elif networktype=="chain":
     prior=chain_distrib(number_a,number_p1,number_q1,number_p2,number_q2)
 elif networktype=="collider":
     prior=collider_distrib(number_a,number_b,number_p1,number_p2,number_p3,number_p4)
-    
+
 
 if st.button('Perform an update by minimizing f-divergence'):
     st.write('To repeat, click again')
     st.write("You can change any parameters above.")
     st.write("Random parameters will be randomized on every rerun.")
     update_by_minimization(prior,constraintz,printing,plotting,rounding,decimround)
-
-    
