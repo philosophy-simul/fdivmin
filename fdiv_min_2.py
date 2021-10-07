@@ -391,11 +391,11 @@ constraintz.append(constraint_a_c)
 
 col1b,col2b,col3b = st.columns(3)
 with col1b:
-    printing1 = st.radio("Write out the results?", ["no", "yes"],key="45")
+    printing1 = st.radio("Write out the results?", ["yes", "no"],key="45")
 with col2b:
-    plotting1 = st.radio("Plot the results?", ["no", "yes"],key="46")
+    plotting1 = st.radio("Plot the results?", ["yes", "no"],key="46")
 with col3b:
-    rounding = st.radio("Rounding of values?",["no", "yes"],key="round")
+    rounding = st.radio("Rounding of values?",["yes", "no"],key="round")
     if rounding=="yes":
         decimround = st.slider("Number of decimals:",2,8,key="roundnr")
     else:
