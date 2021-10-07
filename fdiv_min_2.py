@@ -337,7 +337,7 @@ if networktype == "collider":
 constraintz=[]
 col1a,col2a,col3a,col4a,col5a,col6a = st.columns(6)
 with col1a:
-    constraint_a1 = st.radio("Set posterior probability of a (constraint)?", ["yes","no"],key="33")
+    constraint_a1 = st.radio("Set posterior probability of a (constraint)?", ["no", "yes"],key="33")
     if constraint_a1=="yes":
         constraint_a= st.slider("Choose value:",0.0,1.0,key="34")
         st.write("pr*(a)="+str(constraint_a)[:6])
@@ -345,7 +345,7 @@ with col1a:
         constraint_a=None
 constraintz.append(constraint_a)
 with col2a:
-    constraint_b1 = st.radio("Set posterior probability of b (constraint)?", ["yes","no"],key="35")
+    constraint_b1 = st.radio("Set posterior probability of b (constraint)?", ["no", "yes"],key="35")
     if constraint_b1=="yes":
         constraint_b= st.slider("Choose value:",0.0,1.0,key="36")
         st.write("pr*(b)="+str(constraint_b)[:6])
@@ -354,7 +354,7 @@ with col2a:
 constraintz.append(constraint_b)
 
 with col3a:
-    constraint_c1 = st.radio("Set posterior probability of c (constraint)?", ["yes","no"],key="37")
+    constraint_c1 = st.radio("Set posterior probability of c (constraint)?", ["no", "yes"],key="37")
     if constraint_c1=="yes":
         constraint_c= st.slider("Choose value:",0.0,1.0,key="38")
         st.write("pr*(c)="+str(constraint_c)[:6])
@@ -363,7 +363,7 @@ with col3a:
 constraintz.append(constraint_c)
 
 with col4a:
-    constraint_a_b1 = st.radio("Set posterior probability of b given a (constraint)?", ["yes","no"],key="39")
+    constraint_a_b1 = st.radio("Set posterior probability of b given a (constraint)?", ["no", "yes"],key="39")
     if constraint_a_b1=="yes":
         constraint_a_b= st.slider("Choose value:",0.0,1.0,key="40")
         st.write("pr*(b|a)="+str(constraint_a_b)[:6])
@@ -372,7 +372,7 @@ with col4a:
 constraintz.append(constraint_a_b)
 
 with col5a:
-    constraint_b_c1 = st.radio("Set posterior probability of c given b (constraint)?", ["yes","no"],key="41")
+    constraint_b_c1 = st.radio("Set posterior probability of c given b (constraint)?", ["no", "yes"],key="41")
     if constraint_b_c1=="yes":
         constraint_b_c= st.slider("Choose value:",0.0,1.0,key="42")
         st.write("pr*(c|b)="+str(constraint_b_c)[:6])
@@ -381,7 +381,7 @@ with col5a:
 constraintz.append(constraint_b_c)
 
 with col6a:
-    constraint_a_c1 = st.radio("Set posterior probability of c given a (constraint)?", ["yes","no"],key="43")
+    constraint_a_c1 = st.radio("Set posterior probability of c given a (constraint)?", ["no", "yes"],key="43")
     if constraint_a_c1=="yes":
         constraint_a_c= st.slider("Choose value:",0.0,1.0,key="44")
         st.write("pr*(c|a)="+str(constraint_a_c)[:6])
@@ -391,11 +391,11 @@ constraintz.append(constraint_a_c)
 
 col1b,col2b,col3b = st.columns(3)
 with col1b:
-    printing1 = st.radio("Write out the results?", ["yes","no"],key="45")
+    printing1 = st.radio("Write out the results?", ["no", "yes"],key="45")
 with col2b:
-    plotting1 = st.radio("Plot the results?", ["yes","no"],key="46")
+    plotting1 = st.radio("Plot the results?", ["no", "yes"],key="46")
 with col3b:
-    rounding = st.radio("Rounding of values?",["yes","no"],key="round")
+    rounding = st.radio("Rounding of values?",["no", "yes"],key="round")
     if rounding=="yes":
         decimround = st.slider("Number of decimals:",2,8,key="roundnr")
     else:
