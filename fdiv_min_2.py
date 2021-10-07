@@ -201,35 +201,35 @@ if networktype == "chain":
              pr(c|~b)=q2""")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        number_a1 = st.radio("Set prior probability of a?",["yes","random"],key="1")
+        number_a1 = st.radio("Set prior probability of a?",["random", "yes"],key="1")
         if number_a1=="yes":
             number_a = st.slider("Choose value:",0.0,1.0,key="2")
         else:
             number_a = np.random.random()
         st.write("pr(a)="+str(number_a)[:6])
     with col2:
-        number_p11 = st.radio("Set prior probability of p1?",["yes","random"],key="3")
+        number_p11 = st.radio("Set prior probability of p1?",["random", "yes"],key="3")
         if number_p11=="yes":
             number_p1 = st.slider("Choose value:",0.0,1.0,key="4")
         else:
             number_p1=np.random.random()
         st.write("pr(p1)="+str(number_p1)[:6])
     with col3:
-        number_q11 = st.radio("Set prior probability of q1?",["yes","random"],key="5")
+        number_q11 = st.radio("Set prior probability of q1?",["random", "yes"],key="5")
         if number_q11=="yes":
             number_q1 = st.slider("Choose value:",0.0,1.0,key="6")
         else:
             number_q1=np.random.random()
         st.write("pr(q1)="+str(number_q1)[:6])
     with col4:
-        number_p21 = st.radio("Set prior probability of p2?",["yes","random"],key="7")
+        number_p21 = st.radio("Set prior probability of p2?",["random", "yes"],key="7")
         if number_p21=="yes":
             number_p2 = st.slider("Choose value:",0.0,1.0,key="8")
         else:
             number_p2=np.random.random()
         st.write("pr(p2)="+str(number_p2)[:6])
     with col5:
-        number_q21 = st.radio("Set prior probability of q2?",["yes","random"],key="9")
+        number_q21 = st.radio("Set prior probability of q2?",["random", "yes"],key="9")
         if number_q21=="yes":
             number_q2 = st.slider("Choose value:",0.0,1.0,key="10")
         else:
@@ -245,35 +245,35 @@ if networktype == "common cause":
              pr(c|~a)=q2""")
     col1,col2,col3,col4,col5 = st.columns(5)
     with col1:
-        number_a1 = st.radio("Set prior probability of a?",["yes","random"],key="11")
+        number_a1 = st.radio("Set prior probability of a?",["random", "yes"],key="11")
         if number_a1=="yes":
             number_a = st.slider("Choose value:",0.0,1.0,key="12")
         else:
             number_a = np.random.random()
         st.write("pr(a)="+str(number_a)[:6])
     with col2:
-        number_p11 = st.radio("Set prior probability of p1?",["yes","random"],key="13")
+        number_p11 = st.radio("Set prior probability of p1?",["random", "yes"],key="13")
         if number_p11=="yes":
             number_p1 = st.slider("Choose value:",0.0,1.0,key="14")
         else:
             number_p1=np.random.random()
         st.write("pr(p1)="+str(number_p1)[:6])
     with col3:
-        number_q11 = st.radio("Set prior probability of q1?",["yes","random"],key="15")
+        number_q11 = st.radio("Set prior probability of q1?",["random", "yes"],key="15")
         if number_q11=="yes":
             number_q1 = st.slider("Choose value:",0.0,1.0,key="16")
         else:
             number_q1=np.random.random()
         st.write("pr(q1)="+str(number_q1)[:6])
     with col4:
-        number_p21 = st.radio("Set prior probability of p2?",["yes","random"],key="17")
+        number_p21 = st.radio("Set prior probability of p2?",["random", "yes"],key="17")
         if number_p21=="yes":
             number_p2 = st.slider("Choose value:",0.0,1.0,key="18")
         else:
             number_p2=np.random.random()
         st.write("pr(p2)="+str(number_p2)[:6])
     with col5:
-        number_q21 = st.radio("Set prior probability of q2?",["yes","random"],key="19")
+        number_q21 = st.radio("Set prior probability of q2?",["random", "yes"],key="19")
         if number_q21=="yes":
             number_q2 = st.slider("Choose value:",0.0,1.0,key="20")
         else:
@@ -293,42 +293,42 @@ if networktype == "collider":
              pr(c|~a,~b)=p4""")
     col1,col2,col3,col4,col5,col6 = st.columns(6)
     with col1:
-        number_a1 = st.radio("Set prior probability of a?",["yes","random"],key="21")
+        number_a1 = st.radio("Set prior probability of a?",["random", "yes"],key="21")
         if number_a1=="yes":
             number_a = st.slider("Choose value:",0.0,1.0,key="22")
         else:
             number_a = np.random.random()
         st.write("pr(a)="+str(number_a)[:6])
     with col2:
-        number_b1 = st.radio("Set prior probability of b?",["yes","random"],key="23")
+        number_b1 = st.radio("Set prior probability of b?",["random", "yes"],key="23")
         if number_b1=="yes":
             number_b = st.slider("Choose value:",0.0,1.0,key="24")
         else:
             number_b=np.random.random()
         st.write("pr(b)="+str(number_b)[:6])
     with col3:
-        number_p11 = st.radio("Set prior probability of p1?",["yes","random"],key="25")
+        number_p11 = st.radio("Set prior probability of p1?",["random", "yes"],key="25")
         if number_p11=="yes":
             number_p1 = st.slider("Choose value:",0.0,1.0,key="26")
         else:
             number_p1=np.random.random()
         st.write("pr(p1)="+str(number_p1)[:6])
     with col4:
-        number_p21 = st.radio("Set prior probability of p2?",["yes","random"],key="27")
+        number_p21 = st.radio("Set prior probability of p2?",["random", "yes"],key="27")
         if number_p21=="yes":
             number_p2 = st.slider("Choose value:",0.0,1.0,key="28")
         else:
             number_p2=np.random.random()
         st.write("pr(p2)="+str(number_p2)[:6])
     with col5:
-        number_p31 = st.radio("Set prior probability of p3?",["yes","random"],key="29")
+        number_p31 = st.radio("Set prior probability of p3?",["random", "yes"],key="29")
         if number_p31=="yes":
             number_p3 = st.slider("Choose value:",0.0,1.0,key="30")
         else:
             number_p3=np.random.random()
         st.write("pr(p3)="+str(number_p3)[:6])
     with col6:
-        number_p41 = st.radio("Set prior probability of p4?",["yes","random"],key="31")
+        number_p41 = st.radio("Set prior probability of p4?",["random", "yes"],key="31")
         if number_p41=="yes":
             number_p4 = st.slider("Choose value:",0.0,1.0,key="32")
         else:
