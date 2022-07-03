@@ -395,9 +395,9 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
 st.write(""" This is a tool to update 2 variable-networks by minimizing some central f-divergences; written by Borut Trpin""")
 st.write(""" We assume a network defined by Pr(Rich), Pr(Old|Rich), Pr(Old|Poor)... """)
          
-number_a1 = st.st.slider("Choose Pr(Rich):",0.0,1.0,key="1")
-number_p1 = st.st.slider("Choose Pr(Old|Rich):",0.0,1.0,key="2")
-number_q1 = st.st.slider("Choose Pr(Old|Poor):",0.0,1.0,key="3")
+number_a1 = st.slider("Choose Pr(Rich):",0.0,1.0,key="1")
+number_p1 = st.slider("Choose Pr(Old|Rich):",0.0,1.0,key="2")
+number_q1 = st.slider("Choose Pr(Old|Poor):",0.0,1.0,key="3")
 
 number_a2 = st.radio("Set posterior Q(Rich)?",["no", "yes"],key="4")
 if number_a2=="yes":
@@ -463,5 +463,3 @@ if st.button('Perform an update by minimizing f-divergence'):
 #             con.append(-1)
 #         update_by_minimization(prior,unc,con,1)
 #     j+=1
-
-  
