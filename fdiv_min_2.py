@@ -314,8 +314,7 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
         # the_table.scale(2, 2)                
         # plt.subplots_adjust(bottom=.1)
 
-        df = pd.DataFrame(cell_text,columns=columnZ,index=rows)
-        st.table(df)
+
         # Adjust layout to make room for the table:
 
         plt.xticks(x, labels)
@@ -355,6 +354,8 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
             if cond_constraints[1]!=-1:
                 updtext3+="from Pr(O|P)="+str(round(prior[0]/(prior[0]+prior[1]),decims))+" to Q(O|P)= "+str(round(oldGpoor,decims))
                 ax2.text(.9, 1.3, 'Updated '+updtext3)
+        df = pd.DataFrame(cell_text,columns=columnZ,index=rows)
+        st.table(df)
         st.write("prior* is the prior adjusted for the learned constraint.")
         st.write("dkl*, hel*, ikl*, chisq* are minimizations without sum(pr)=1 constraint.")
         st.write("CS distance is squared distance from prior*.")
