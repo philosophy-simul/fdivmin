@@ -11,6 +11,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import itertools
 import csv
+import pandas as pd
 import streamlit as st
 
 st.set_page_config(
@@ -276,7 +277,7 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
         labels=["Pr(R&O)","Pr(R&Y)","Pr(P&O)","Pr(P&Y)"]
         # Add a table at the bottom of the axes
         rows=("Pr(R)","Pr(O|R)","Pr(O|P)","Pr(O)","Pr(R|O)","Pr(R&O)","Pr(R&Y)","Pr(P&O)","Pr(P&Y)","CS distance","MT distance")
-        columns=["prior","dkl","hel","ikl","chisq","dkl*","hel*","ikl*","chisq*","prior*"]
+        columnZ=["prior","dkl","hel","ikl","chisq","dkl*","hel*","ikl*","chisq*","prior*"]
         locA="top left"
         allmarginals=[]
 
@@ -306,14 +307,16 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
             
             allmarginals1=np.array(allmarginals).T.tolist()
         cell_text=allmarginals1
-        the_table = plt.table(cellText=cell_text,
-                              rowLabels=rows,
-                              colLabels=columns,
-                              loc=locA)
-        
+        # the_table = plt.table(cellText=cell_text,
+        #                       rowLabels=rows,
+        #                       colLabels=columnZ,
+        #                       loc=locA)
+        # the_table.scale(2, 2)                
+        # plt.subplots_adjust(bottom=.1)
+
+        df = pd.DataFrame(cell_text,columns=columnZ,index=rows)
+        st.table(df)
         # Adjust layout to make room for the table:
-        plt.subplots_adjust(bottom=.1)
-        the_table.scale(2, 2)                
 
         plt.xticks(x, labels)
         # plt.title("standard")
@@ -463,3 +466,5 @@ if st.button('Perform an update by minimizing f-divergence'):
 #             con.append(-1)
 #         update_by_minimization(prior,unc,con,1)
 #     j+=1
+
+    
