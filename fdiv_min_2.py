@@ -179,6 +179,14 @@ def sq_distance(distr1,distr2):
         suma+=(a-b)**2
     return suma
 
+
+@st.cache
+def convert_df(df):
+   return df.to_csv().encode('utf-8')
+
+
+
+
 def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints=[.5,.5],plotting=1,decims=5):
 
 # uncond_constraints = [
@@ -361,6 +369,16 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
         st.write("dkl*, hel*, ikl*, chisq* are minimizations without sum(pr)=1 constraint.")
         st.write("CS distance is squared distance from prior*.")
         st.write("MT distance is squared distance from the coresponding distribution we would get without the constraint that sum(pr)=1.")
+        csvf = convert_df(df)
+        
+        st.download_button(
+           "Press to Download the Table",
+           csvf,
+           "minimization.csv",
+           "text/csv",
+           key='download-csv'
+        )
+
         plt.subplots_adjust(top=0.555,bottom=0.2,left=0.356,right=0.97,hspace=0.75,wspace=0.11)
         updtex2="_to_"
         if uncond_constraints!=[]:
