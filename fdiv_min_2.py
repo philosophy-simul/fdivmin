@@ -369,7 +369,7 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
         st.write("prior* is the prior adjusted for the learned constraint.")
         st.write("dkl*, hel*, ikl*, chisq* are minimizations without sum(pr)=1 constraint.")
         st.write("CS distance is squared distance from prior*.")
-        st.write("MT distance is squared distance from the coresponding distribution we would get without the constraint that sum(pr)=1.")
+        st.write("MT distance is squared distance from the corresponding distribution we would get without the constraint that sum(pr)=1.")
         csvf = convert_df(df)
         
         st.download_button(
