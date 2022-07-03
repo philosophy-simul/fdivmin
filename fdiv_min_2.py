@@ -355,16 +355,10 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
             if cond_constraints[1]!=-1:
                 updtext3+="from Pr(O|P)="+str(round(prior[0]/(prior[0]+prior[1]),decims))+" to Q(O|P)= "+str(round(oldGpoor,decims))
                 ax2.text(.9, 1.3, 'Updated '+updtext3)
-
-        ax1.text(.75,-.35,"plot 1: probs sum to 1 (constraint)")
-        ax2.text(.75,-.35,"plot 2: probs need not sum to 1 (*)")
-        ax1.text(-2.65,.2,"prior* is the prior")
-        ax1.text(-2.65,.1," adjusted for the learned constraint.")
-        ax1.text(-2.65,0,"dkl*,hel*,ikl*,chisq* are")
-        ax1.text(-2.65,-.1," minimizations without sum(pr)=1 constr.")
-        ax1.text(-2.65,-.2,"CS dist. is squared distance from prior*")
-        ax1.text(-2.65,-.3,"MT dist. is squared distance")
-        ax1.text(-2.65,-.4," from distr. without sum(pr)=1")
+        st.write("prior* is the prior adjusted for the learned constraint.")
+        st.write("dkl*, hel*, ikl*, chisq* are minimizations without sum(pr)=1 constraint.")
+        st.write("CS distance is squared distance from prior*.")
+        st.write("MT distance is squared distance from the coresponding distribution we would get without the constraint that sum(pr)=1.")
         plt.subplots_adjust(top=0.555,bottom=0.2,left=0.356,right=0.97,hspace=0.75,wspace=0.11)
         updtex2="_to_"
         if uncond_constraints!=[]:
@@ -386,7 +380,7 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
         plt.savefig(filename+".pdf",format="pdf")
         # plt.close()
         st.pyplot(fig)
-        tabletext=[[""]+columns]
+        tabletext=[[""]+columnZ]
         for i,j in enumerate(allmarginals1):
             tabletext.append([rows[i]]+j)
         with open (filename+".csv","w",newline = "") as csvfile:
