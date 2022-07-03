@@ -356,6 +356,8 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
                 updtext3+="from Pr(O|P)="+str(round(prior[0]/(prior[0]+prior[1]),decims))+" to Q(O|P)= "+str(round(oldGpoor,decims))
                 ax2.text(.9, 1.3, 'Updated '+updtext3)
         df = pd.DataFrame(cell_text,columns=columnZ,index=rows)
+        st.pyplot(fig)
+
         st.table(df)
         st.write("prior* is the prior adjusted for the learned constraint.")
         st.write("dkl*, hel*, ikl*, chisq* are minimizations without sum(pr)=1 constraint.")
@@ -381,7 +383,6 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
         filename="r_oGr_oGp_"+str(round(prior[0]+prior[1],decims))+"_"+str(round(prior[0]/(prior[0]+prior[1]),decims))+"_"+str(round(prior[2]/(prior[2]+prior[3]),decims))+updtex2
         plt.savefig(filename+".pdf",format="pdf")
         # plt.close()
-        st.pyplot(fig)
         tabletext=[[""]+columnZ]
         for i,j in enumerate(allmarginals1):
             tabletext.append([rows[i]]+j)
