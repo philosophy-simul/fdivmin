@@ -222,7 +222,8 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
     cons = [{'type': 'eq', 'fun': lambda x:  sum(x[i] for i in range(len(prior))) - 1}]
     # every distr has to sum up to 1
     
-
+    if uncond_constraints==[-1]:
+        uncond_constraints=[]
     if uncond_constraints==[]:
         rich=prior[0]+prior[1]
     else:
