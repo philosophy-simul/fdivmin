@@ -16,9 +16,7 @@ import streamlit as st
 
 st.set_page_config(
 page_title="f-div min explorer",
-page_icon="🔦",
-layout="wide"
-)
+page_icon="🔦")
 
 
 def combine(nr_variables, nr_answers):
