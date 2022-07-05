@@ -305,7 +305,7 @@ def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints
                 marginals.append(sq_distance(ys[distrN],priorStar))
             else:
                 marginals.append(-12345)
-            if distrN > 0 and distrN < 4:
+            if distrN > 0 and distrN < 5:
                 marginals.append(sq_distance(ys[distrN],ys[distrN+4]))
             else:
                 marginals.append(-12345)
