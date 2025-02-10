@@ -1,163 +1,74 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jul  3 10:19:51 2022
+Created on Tue Oct  5 16:01:41 2021
 
+@author: boruttrpin
 """
-
 import numpy as np
+import streamlit as st
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-import itertools
-import csv
 import pandas as pd
-import streamlit as st
+
 
 st.set_page_config(
-page_title="f-div min explorer",
-page_icon="🔦")
+page_title="f-div minimizer",
+page_icon="🔦",
+layout="wide"
+)
 
 
-def combine(nr_variables, nr_answers):
-    if nr_variables==0 or nr_answers==0:
-        return([])
-    options=list(itertools.product(range(nr_answers), repeat=nr_variables))
-    return(options)
-
-def probs(distr,which=[0,1,2,3,4],conjunction=1):
-    #conjunction = 1: search for conjunctions, = 0: search for disjunctions.
-    n=int(np.log2(len(distr)))
-    truthtable=combine(n,2)
-    relevant_rows=[]
-    for i,j in enumerate(truthtable):
-        valid=1
-        valids=[]
-        for m in which:
-            if type(m)==int:
-                if j[m]==1:
-                    valid=0
-                    valids.append(0)
-                else:
-                    valids.append(1)
-            else: # for negations, go with the float
-                m=int(m)
-                if j[m]==0:
-                    valid=0
-                    valids.append(0)
-                else:
-                    valids.append(1)
-        if valid==1 and conjunction==1:
-            relevant_rows.append(i)
-        if 1 in valids and conjunction==0:
-            relevant_rows.append(i)
-    return relevant_rows
-
-def sumprobs(distr,whichrows=[0,1]):
-    s=0
-    for row in whichrows:
-        s+=distr[row]
-    return s
-
-def condprob(distr,which=([0],1),given=([1],1)):
-    #which=([props],conjunction)
-    #given=([props],conjunction)
-    #calculates: pr(which | given)
-
-    rowsWhich = probs(distr,which[0],which[1])
-    rowsGiven = probs(distr,given[0],given[1])
-    a=sumprobs(distr,list(set(rowsWhich)&set(rowsGiven)))
-    b=sumprobs(distr,rowsGiven)
-    if b==0:
-        return 0
-    else: return a/b
-    # return a/b
-
-def relevant_ind_tests(n):
-    s=set(range(n))
-    ss=[]
-    for i in range(1,len(s)):
-        ss.append(list(map(set, itertools.combinations(s, i))) )
-    ss2=[]
-    for i in ss:
-        for j in i:
-            ss2.append(j)
-    to_test = []
-    singletons = [i for i in ss2 if len(i)==1]
-    for subset_1 in singletons:
-        for subset_2 in ss2:
-            if subset_1.intersection(subset_2)==set():
-                to_test.append([list(subset_1),list(subset_2)])
-    return to_test
-
-
-
-def numerical_indep_tests(distr,floaterrorlim=1e-4):
-    nprop=int(np.log2(len(distr)))
-    rel_tests=relevant_ind_tests(nprop)
-    pos=[0]
-    rel1=[]
-    rel2=[]
-    for test in rel_tests:
-        if test[0]==pos:
-            rel1.append(test)
-        else:
-            rel2.append(rel1)
-            rel1=[]
-            rel1.append(test)
-            pos=test[0]
-    rel2.append(rel1)
-    condinds=[]
-    uncondinds=[]
-    condinds_num=[]
-    uncondinds_num=[]
-    for prop_options in rel2:
-        prop=prop_options[0][0]
-        for option in prop_options:
-            prop1=sumprobs(distr,probs(distr,option[0],1))
-            prop2=sumprobs(distr,probs(distr,option[1],1))
-            both=list((set(option[0]) | set(option[1])))
-            prop3=sumprobs(distr,probs(distr,both,1))
-            test1=abs(prop1*prop2-prop3)<floaterrorlim
-            uncondinds_num.append(abs(prop1*prop2-prop3))
-            if test1==True:
-                if not ([option[1],option[0]] in uncondinds):
-                    uncondinds.append([option[0],option[1]])
-            given=option[1]
-            for anotheroption in prop_options:
-                anothergiven=anotheroption[1]
-                if set(given).issubset(set(anothergiven)) and given!=anothergiven:
-                    test=abs(condprob(distr,(prop,1),(given,1))-condprob(distr,(prop,1),(anothergiven,1)))<floaterrorlim
-
-                    condinds_num.append(abs(condprob(distr,(prop,1),(given,1))-condprob(distr,(prop,1),(anothergiven,1))))
-                    # print(prop,given,anothergiven)
-                    # print(abs(condprob(distr,(prop,1),(given,1))-condprob(distr,(prop,1),(anothergiven,1))))
-                    if test==True:
-                        if not([list(set(anothergiven)-set(given)),prop,given] in condinds):
-                            condinds.append([prop,list(set(anothergiven)-set(given)),given])
-                            # print(prop,given,anothergiven)
-                            # print(abs(condprob(distr,(prop,1),(given,1))-condprob(distr,(prop,1),(anothergiven,1))))
-    return uncondinds,condinds,
-# uncondinds_num,condinds_num
-# uncondinds: [x] is independent of [y]
-# condinds: [x] is conditionally indepenedent of [y] given [z]
-
-def random_distrib(n_prop=3):
+def random_distrib(n_prop=3,mest=4):
     n=2**n_prop
     a=[]
     for i in range(n):
         a.append(np.random.uniform(0,1))
     a=[i/sum(a) for i in a]
+
+    a=[0.0 if "e" in str(i) else float(str(i)[:mest]) for i in a]
+    dif=1-sum(a)
+    a[int(np.random.choice(n,1)[0])]+=dif
     return a
 
-def distr_2(a,p,q):
+def chain_distrib(a=.7,p1=.8,q1=.4,p2=.6,q2=.3):
+    # assuming a->b->c with pr(a) = a, pr(b|a)=p1, pr(b|~a)=q1, pr(c|b)=p2, pr(c|~b)=q2
     return [
-        a*p,
-        a*(1-p),
-        (1-a)*q,
-        (1-a)*(1-q)
-       ]
+        a*p1*p2,
+        a*p1*(1-p2),
+        a*(1-p1)*q2,
+        a*(1-p1)*(1-q2),
+        (1-a)*q1*p2,
+        (1-a)*q1*(1-p2),
+        (1-a)*(1-q1)*q2,
+        (1-a)*(1-q1)*(1-q2)
+        ]
 
+def commoncause_distrib(a=.7,p1=.8,q1=.4,p2=.6,q2=.3):
+    # assuming b<-a->c with pr(a) = a, pr(b|a)=p1, pr(b|~a)=q1, pr(c|a)=p2, pr(c|~a)=q2
+    return [
+        a*p1*p2,
+        a*p1*(1-p2),
+        a*(1-p1)*p2,
+        a*(1-p1)*(1-p2),
+        (1-a)*q1*q2,
+        (1-a)*q1*(1-q2),
+        (1-a)*(1-q1)*q2,
+        (1-a)*(1-q1)*(1-q2)
+        ]
 
+def collider_distrib(a=.7,b=.6,p1=.8,p2=.4,p3=.6,p4=.3):
+    # assuming a->c<-b with pr(a) = a, pr(b)=b, pr(c|a,b)=p1, pr(c|a,~b)=p2, pr(c|~a,b)=p3, pr(c|~a,~b)=p4
+    return [
+        a*b*p1,
+        a*b*(1-p1),
+        a*(1-b)*p2,
+        a*(1-b)*(1-p2),
+        (1-a)*b*p3,
+        (1-a)*b*(1-p3),
+        (1-a)*(1-b)*p4,
+        (1-a)*(1-b)*(1-p4)
+        ]
 
 def f_of_x(x_state,divergence="kl"):
     if divergence == "kl":
@@ -169,315 +80,349 @@ def f_of_x(x_state,divergence="kl"):
     if divergence=="chisq":
         return (x_state - 1)**2
 
-
-
-
-def sq_distance(distr1,distr2):
-    suma=0
-    for a,b in zip(distr1,distr2):
-        suma+=(a-b)**2
-    return suma
-
-
-@st.cache
-def convert_df(df):
-   return df.to_csv().encode('utf-8')
-
-
-
-
-def update_by_minimization(prior="rand",uncond_constraints=[.5],cond_constraints=[.5,.5],plotting=1,decims=5):
-
-# uncond_constraints = [
-#     ([props],prob,conjunct),
-#     ([props],prob,conjunct),
-#     ([props],prob,conjunct),
-#     ...
-#     ]
-
-# cond_constraints = [
-#     ([[ante_props], conjunct], [[conseq_props], conjunct], prob),
-#     ([[ante_props], conjunct], [[conseq_props], conjunct], prob),
-#     ([[ante_props], conjunct], [[conseq_props], conjunct], prob),
-#     ...
-#     ]
-    
+def update_by_minimization(prior="rand",posterior_a_b_c_if_a_c_if_b_c_if_a_c=[None, None,1,1,None,None],printing=1,plotting=1,rounding="Yes",decimround=3):
+    # in case of skiing trip: assume a->b->c with a: exam, b: skiing, c: buying outfit
+    # posterior_a_b_c_if_a_c_if_b_c_if_a_c is a list of fixed posterior a, b, c, if a then b, if b then c, if a then c. If None, then the parameter is not fixed in posterior.
     if prior=="rand":
-        prior = random_distrib(2)
-
+        prior = random_distrib(3,4)
+        while 0 in prior:
+            prior = random_distrib(3,4)
 
     divergence="kl"
     divergence2="hel"
     divergence3="ikl"
     divergence4="chisq"
-    obj_fun1= lambda x: sum(prior[i]*f_of_x((x[i]/prior[i]),divergence) for i in range(len(prior)))
-    obj_fun2= lambda x: sum(prior[i]*f_of_x((x[i]/prior[i]),divergence2) for i in range(len(prior)))
-    obj_fun3= lambda x: sum(prior[i]*f_of_x((x[i]/prior[i]),divergence3) for i in range(len(prior)))
-    obj_fun4= lambda x: sum(prior[i]*f_of_x((x[i]/prior[i]),divergence4) for i in range(len(prior)))
+    obj_fun1= lambda x: prior[0]*f_of_x((x[0]/prior[0]),divergence)+prior[1]*f_of_x((x[1]/prior[1]),divergence)+prior[2]*f_of_x((x[2]/prior[2]),divergence)+prior[3]*f_of_x((x[3]/prior[3]),divergence)+prior[4]*f_of_x((x[4]/prior[4]),divergence)+prior[5]*f_of_x((x[5]/prior[5]),divergence)+prior[6]*f_of_x((x[6]/prior[6]),divergence)+prior[7]*f_of_x((x[7]/prior[7]),divergence)
+    obj_fun2= lambda x: prior[0]*f_of_x((x[0]/prior[0]),divergence2)+prior[1]*f_of_x((x[1]/prior[1]),divergence2)+prior[2]*f_of_x((x[2]/prior[2]),divergence2)+prior[3]*f_of_x((x[3]/prior[3]),divergence2)+prior[4]*f_of_x((x[4]/prior[4]),divergence2)+prior[5]*f_of_x((x[5]/prior[5]),divergence2)+prior[6]*f_of_x((x[6]/prior[6]),divergence2)+prior[7]*f_of_x((x[7]/prior[7]),divergence2)
+    obj_fun3= lambda x: prior[0]*f_of_x((x[0]/prior[0]),divergence3)+prior[1]*f_of_x((x[1]/prior[1]),divergence3)+prior[2]*f_of_x((x[2]/prior[2]),divergence3)+prior[3]*f_of_x((x[3]/prior[3]),divergence3)+prior[4]*f_of_x((x[4]/prior[4]),divergence3)+prior[5]*f_of_x((x[5]/prior[5]),divergence3)+prior[6]*f_of_x((x[6]/prior[6]),divergence3)+prior[7]*f_of_x((x[7]/prior[7]),divergence3)
+    obj_fun4= lambda x: prior[0]*f_of_x((x[0]/prior[0]),divergence4)+prior[1]*f_of_x((x[1]/prior[1]),divergence4)+prior[2]*f_of_x((x[2]/prior[2]),divergence4)+prior[3]*f_of_x((x[3]/prior[3]),divergence4)+prior[4]*f_of_x((x[4]/prior[4]),divergence4)+prior[5]*f_of_x((x[5]/prior[5]),divergence4)+prior[6]*f_of_x((x[6]/prior[6]),divergence4)+prior[7]*f_of_x((x[7]/prior[7]),divergence4)
 
-    nprop=int(np.log2(len(prior)))
-    bnds = [(0+1e-320, 1) for i in range(2**nprop)] # open lower bound
 
-    cons = [{'type': 'eq', 'fun': lambda x:  sum(x[i] for i in range(len(prior))) - 1}]
-    # every distr has to sum up to 1
-    
-    if uncond_constraints==[-1]:
-        uncond_constraints=[]
-    if uncond_constraints==[]:
-        rich=prior[0]+prior[1]
+    bnds = [(0+1e-320, 1) for i in range(8)] # open lower bound
+
+    a=posterior_a_b_c_if_a_c_if_b_c_if_a_c[0]
+    b=posterior_a_b_c_if_a_c_if_b_c_if_a_c[1]
+    c=posterior_a_b_c_if_a_c_if_b_c_if_a_c[2]
+    if_a_then_b=posterior_a_b_c_if_a_c_if_b_c_if_a_c[3]
+    if_b_then_c=posterior_a_b_c_if_a_c_if_b_c_if_a_c[4]
+    if_a_then_c=posterior_a_b_c_if_a_c_if_b_c_if_a_c[5]
+    cons = [{'type': 'eq', 'fun': lambda x:  x[0] + x[1] + x[2] + x[3] + x[4] + x[5] + x[6] + x[7] - 1}]
+    # every posterior distribution is constrained to sum up to 1
+    if a!=None:
+        cons.append({'type': 'eq', 'fun': lambda x:  x[4] + x[5] + x[6] + x[7] -1+a}) # fixing a
+    if b!=None:
+        cons.append({'type': 'eq', 'fun': lambda x:  x[2] + x[3] + x[6] + x[7] -1+b}) # fixing b
+    if c!=None:
+        cons.append({'type': 'eq', 'fun': lambda x:  x[1] + x[3] + x[5] + x[7] -1+c}) # fixing c
+    if if_a_then_b!=None:
+        cons.append({'type': 'eq', 'fun': lambda x:  x[0] + x[1] - if_a_then_b*(x[0] + x[1] + x[2] + x[3])})
+    if if_b_then_c!=None:
+        cons.append({'type': 'eq', 'fun': lambda x:  x[0] + x[4] - if_b_then_c*(x[0] + x[1] + x[4] + x[5])})
+    if if_a_then_c!=None:
+        cons.append({'type': 'eq', 'fun': lambda x:  x[0] + x[2] - if_a_then_c*(x[0] + x[2] + x[4] + x[6])})
+
+
+
+
+    res1  = minimize(obj_fun1, x0 =[0.5]*8,bounds=bnds,constraints=cons)
+    res2  = minimize(obj_fun2, x0 =[0.5]*8,bounds=bnds,constraints=cons)
+    res3  = minimize(obj_fun3, x0 =[0.5]*8,bounds=bnds,constraints=cons)
+    res4  = minimize(obj_fun4, x0 =[0.5]*8,bounds=bnds,constraints=cons)
+    if printing==1 and plotting==1:
+        columnize=1
     else:
-        rich=uncond_constraints[0]
-        cons.append({'type': 'eq', 'fun': lambda x:  sum(x[i] for i in [0,1]) - rich})
-    if cond_constraints==[]:
-        oldGrich=prior[0]/(prior[0]+prior[1])
-        oldGpoor=prior[2]/(prior[2]+prior[3])
-    else:
-        if cond_constraints[0]==-1:
-            oldGrich=prior[0]/(prior[0]+prior[1])
+        columnize=0
+    if printing==1:
+        labs=["a,b,c","a,b,~c","a,~b,c","a,~b,~c","~a,b,c","~a,b,~c","~a,~b,c","~a,~b,~c"]
+        tablelabs=["","prior","kl","hel","ikl","chisq"]
+        adats=[0,prior[0]+prior[1]+prior[2]+prior[3],res1.x[0]+res1.x[1]+res1.x[2]+res1.x[3],res2.x[0]+res2.x[1]+res2.x[2]+res2.x[3],res3.x[0]+res3.x[1]+res3.x[2]+res3.x[3],res4.x[0]+res4.x[1]+res4.x[2]+res4.x[3]]
+        bdats=[0,prior[0]+prior[1]+prior[4]+prior[5],res1.x[0]+res1.x[1]+res1.x[4]+res1.x[5],res2.x[0]+res2.x[1]+res2.x[4]+res2.x[5],res3.x[0]+res3.x[1]+res3.x[4]+res3.x[5],res4.x[0]+res4.x[1]+res4.x[4]+res4.x[5]]
+        cdats=[0,prior[0]+prior[2]+prior[4]+prior[6],res1.x[0]+res1.x[2]+res1.x[4]+res1.x[6],res2.x[0]+res2.x[2]+res2.x[4]+res2.x[6],res3.x[0]+res3.x[2]+res3.x[4]+res3.x[6],res4.x[0]+res4.x[2]+res4.x[4]+res4.x[6]]
+
+
+        if rounding=="yes":
+            dats=np.vstack([labs,np.round(np.array(prior),decimround),np.round(res1.x,decimround),np.round(res2.x,decimround),np.round(res3.x,decimround),np.round(res4.x,decimround)]).T
+            dats=np.vstack([tablelabs,dats,np.round(adats,decimround),np.round(bdats,decimround),np.round(cdats,decimround),["success?","",str(res1.success),str(res2.success),str(res3.success),str(res4.success)]])
+
         else:
-            oldGrich=cond_constraints[0]
-            cons.append({'type': 'eq', 'fun': lambda x: sum(x[i] for i in [0]) - oldGrich*( sum(x[j] for j in [0,1]))  })
-        if cond_constraints[1]==-1:
-            oldGpoor=prior[2]/(prior[2]+prior[3])
-        else:
-            oldGpoor=cond_constraints[1]
-            cons.append({'type': 'eq', 'fun': lambda x: sum(x[i] for i in [2]) - oldGpoor*( sum(x[j] for j in [2,3]))  })
+            dats=np.vstack([labs,np.array(prior),res1.x,res2.x,res3.x,res4.x]).T
+            dats=np.vstack([tablelabs,dats,adats,bdats,cdats,["success?","",str(res1.success),str(res2.success),str(res3.success),str(res4.success)]])
 
-            
+        dats[-4][0]="a"
+        dats[-3][0]="b"
+        dats[-2][0]="c"
+        if columnize==0:
+            st.table(dats)
 
-    independences_prior=numerical_indep_tests(prior)
-
-    res1  = minimize(obj_fun1, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons)
-    res2  = minimize(obj_fun2, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons)
-    res3  = minimize(obj_fun3, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons)
-    res4  = minimize(obj_fun4, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons)
-
-    res1a  = minimize(obj_fun1, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons[1:])
-    res2a  = minimize(obj_fun2, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons[1:])
-    res3a  = minimize(obj_fun3, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons[1:])
-    res4a  = minimize(obj_fun4, x0 =[0.5]*(2**nprop),bounds=bnds,constraints=cons[1:])
-
-    # we minimize functions according to constraints and according to various f divergences.
-
-    independences_post1=numerical_indep_tests(res1.x)
-    independences_post2=numerical_indep_tests(res2.x)
-    independences_post3=numerical_indep_tests(res3.x)
-    independences_post4=numerical_indep_tests(res4.x)
-    ys = [prior,res1.x,res2.x,res3.x, res4.x]
-    ysa = [prior, res1a.x, res2a.x, res3a.x, res4a.x]
-
-    indeps=[independences_prior,independences_post1,independences_post2,independences_post3,independences_post4]
+    ys = [res1.x,res2.x,res3.x, res4.x]
     successes=[res1.success,res2.success,res3.success, res4.success]
-    probprops2=[]
-    priorStar=distr_2(rich,oldGrich,oldGpoor)
-    for distr in ys:
-        probprops=[]
-        for i in range(nprop):
-            probprops.append(sumprobs(distr,probs(distr,[i],1)))
-        probprops2.append(probprops)
     if plotting==1:
-        fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True,figsize=(10,5))
-        # fig=plt.figure()
-        x = np.arange(1, 1+2**nprop)
+        fig=plt.figure()
+        x = np.arange(1, 9)
+        labels=["a,b,c","a,b,~c","a,~b,c","a,~b,~c","~a,b,c","~a,b,~c","~a,~b,c","~a,~b,~c"]
+        plt.xticks(x, labels, rotation='vertical')
+        plt.plot(x,prior,label="prior")
+        plt.plot(x, ys[0],label="kl")
+        plt.plot(x, ys[1],label="hel")
+        plt.plot(x, ys[2],label="ikl")
+        plt.plot(x,ys[3],label="chisq")
+        plt.legend()
+        if columnize==0:
+            st.pyplot(fig)
+            st.write("Note: lines often overlap completely.")
+            st.write("minimized ... kl: Kullback Leibler divergence, hel: Hellinger distance, ikl: inverse Kullback Leibler, chisq: chi square divergence")
+    if columnize==1:
+        col1c,col2c=st.columns(2)
+        with col1c:
+            st.table(dats)
+            datscsv = pd.DataFrame(dats)
+            datscsv = datscsv.to_csv().encode('utf-8')
+            st.download_button(
+                label="Download values as CSV",
+                data=datscsv,
+                file_name='minfdiv.csv',
+                mime='text/csv',)
+        with col2c:
+            st.pyplot(fig)
+        st.write("Note: lines often overlap completely.")
+        st.write("minimized ... kl: Kullback Leibler divergence, hel: Hellinger distance, ikl: inverse Kullback Leibler, chisq: chi square divergence")
 
-        labels=["Pr(R&O)","Pr(R&Y)","Pr(P&O)","Pr(P&Y)"]
-        # Add a table at the bottom of the axes
-        rows=("Pr(R)","Pr(O|R)","Pr(O|P)","Pr(O)","Pr(R|O)","Pr(R&O)","Pr(R&Y)","Pr(P&O)","Pr(P&Y)","CS distance","MT distance")
-        columnZ=["prior","dkl","hel","ikl","chisq","dkl*","hel*","ikl*","chisq*","prior*"]
-        locA="top left"
-        allmarginals=[]
+    return prior,ys,successes
 
-        ys=ys+ysa[1:]+[priorStar]
-        for distrN in range(len(ys)):
-            marginals=[]
-            for propN in range(nprop):
-                marginals.append(sumprobs(ys[distrN],probs(ys[distrN],[propN])))
-
-            marginals.insert(1,ys[distrN][0]/(ys[distrN][0]+ys[distrN][1]))
-            marginals.insert(2,ys[distrN][2]/(ys[distrN][2]+ys[distrN][3]))
-            marginals.append(ys[distrN][0]/(ys[distrN][0]+ys[distrN][2]))
-            marginals.append(ys[distrN][0])
-            marginals.append(ys[distrN][1])
-            marginals.append(ys[distrN][2])
-            marginals.append(ys[distrN][3])
-            if distrN != len(ys)-1:
-                marginals.append(sq_distance(ys[distrN],priorStar))
-            else:
-                marginals.append(-12345)
-            if distrN > 0 and distrN < 5:
-                marginals.append(sq_distance(ys[distrN],ys[distrN+4]))
-            else:
-                marginals.append(-12345)
-            
-            allmarginals.append([str(round(i,decims)) if i>-12345 else "N/A" for i in marginals])
-            
-            allmarginals1=np.array(allmarginals).T.tolist()
-        cell_text=allmarginals1
-        # the_table = plt.table(cellText=cell_text,
-        #                       rowLabels=rows,
-        #                       colLabels=columnZ,
-        #                       loc=locA)
-        # the_table.scale(2, 2)                
-        # plt.subplots_adjust(bottom=.1)
-
-
-        # Adjust layout to make room for the table:
-
-        plt.xticks(x, labels)
-        # plt.title("standard")
-        ax1.plot(x, ys[1],label="kl",linestyle="None",marker="v")
-        ax1.plot(x, ys[2],label="hel",linestyle="None",marker="^")
-        ax1.plot(x, ys[3],label="ikl",linestyle="None",marker="<")
-        ax1.plot(x,ys[4],label="chisq",linestyle="None",marker=">")
-        ax1.plot(x,prior,label="prior",color="m",marker="o",linestyle="None")
-        ax1.plot(x,priorStar,label="prior*",color="k",marker="+",linestyle="None")
-        ax1.grid(True)
-        ax1.legend(bbox_to_anchor=(-.45,1), loc='upper left', borderaxespad=0)
-        ax1.text(.75,-.35,"plot 1: probs sum to 1 (constraint)")
-        ax2.text(.75,-.35,"plot 2: probs need not sum to 1 (*)")
-        ax2.plot(x, ysa[1],label="kl",linestyle="None",marker="v")
-        ax2.plot(x, ysa[2],label="hel",linestyle="None",marker="^")
-        ax2.plot(x, ysa[3],label="ikl",linestyle="None",marker="<")
-        ax2.plot(x,ysa[4],label="chisq",linestyle="None",marker=">")
-        ax2.plot(x,prior,label="prior",color="m",marker="o",linestyle="None")
-        ax2.plot(x,priorStar,label="prior*",color="k",marker="+",linestyle="None")
-        ax2.grid(True)
-        updtext=""
-        updtext2=""
-        updtext3=""
-        if uncond_constraints!=[]:
-            updtext+="from Pr(R)="+str(round(prior[0]+prior[1],decims))+" to Q(R)= "+str(round(rich,decims))
-            if cond_constraints!=[]:
-                updtext+=","
-            ax2.text(.9, 1.7, 'Updated '+updtext)
-
-        if cond_constraints!=[]:
-            if cond_constraints[0]!=-1:
-                updtext2+="from Pr(O|R)="+str(round(prior[0]/(prior[0]+prior[1]),decims))+" to Q(O|R)= "+str(round(oldGrich,decims))
-                if cond_constraints[1]!=-1:
-                    updtext2+=","
-                ax2.text(.9, 1.5, 'Updated '+updtext2)
-
-            if cond_constraints[1]!=-1:
-                updtext3+="from Pr(O|P)="+str(round(prior[0]/(prior[0]+prior[1]),decims))+" to Q(O|P)= "+str(round(oldGpoor,decims))
-                ax2.text(.9, 1.3, 'Updated '+updtext3)
-        df = pd.DataFrame(cell_text,columns=columnZ,index=rows)
-        st.pyplot(fig)
-
-        st.table(df)
-        st.write("prior* is the prior adjusted for the learned constraint.")
-        st.write("dkl*, hel*, ikl*, chisq* are minimizations without sum(pr)=1 constraint.")
-        st.write("CS distance is squared distance from prior*.")
-        st.write("MT distance is squared distance from the corresponding distribution we would get without the constraint that sum(pr)=1.")
-        csvf = convert_df(df)
-        
-        st.download_button(
-           "Press to Download the Table",
-           csvf,
-           "minimization.csv",
-           "text/csv",
-           key='download-csv'
-        )
-
-        plt.subplots_adjust(top=0.555,bottom=0.2,left=0.356,right=0.97,hspace=0.75,wspace=0.11)
-        updtex2="_to_"
-        if uncond_constraints!=[]:
-            updtex2+=str(round(rich,decims))
+st.write(""" This is a tool to update 3 variable-networks by minimizing some central f-divergences; written by Borut Trpin""")
+networktype = st.radio("Type of network?", ["random","chain","common cause","collider"])
+if networktype == "chain":
+    st.write("""assuming a->b->c
+             \n
+             pr(a)=a,
+             pr(b|a)=p1,
+             pr(b|~a)=q1,
+             pr(c|b)=p2,
+             pr(c|~b)=q2""")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        number_a1 = st.radio("Set prior probability of a?",["random", "yes"],key="1")
+        if number_a1=="yes":
+            number_a = st.slider("Choose value:",0.0,1.0,key="2")
         else:
-            updtex2+="x"
-        if cond_constraints!=[]:
-            if cond_constraints[0]!=-1:
-                updtex2+="_"+str(round(oldGrich,decims))
-            else:
-                updtex2+="_x"
-            if cond_constraints[1]!=-1:
-                updtex2+="_"+str(round(oldGpoor,decims))
-            else:
-                updtex2+="_x"
+            number_a = np.random.random()
+        st.write("pr(a)="+str(number_a)[:6])
+    with col2:
+        number_p11 = st.radio("Set prior probability of p1?",["random", "yes"],key="3")
+        if number_p11=="yes":
+            number_p1 = st.slider("Choose value:",0.0,1.0,key="4")
         else:
-            updtex2+="_x_x"
-        filename="r_oGr_oGp_"+str(round(prior[0]+prior[1],decims))+"_"+str(round(prior[0]/(prior[0]+prior[1]),decims))+"_"+str(round(prior[2]/(prior[2]+prior[3]),decims))+updtex2
-        plt.savefig(filename+".pdf",format="pdf")
-        # plt.close()
-        tabletext=[[""]+columnZ]
-        for i,j in enumerate(allmarginals1):
-            tabletext.append([rows[i]]+j)
-        with open (filename+".csv","w",newline = "") as csvfile:
-            my_writer = csv.writer(csvfile, delimiter = ",")
-            my_writer.writerows(tabletext)
-        
-    return ys,probprops2,indeps
+            number_p1=np.random.random()
+        st.write("pr(p1)="+str(number_p1)[:6])
+    with col3:
+        number_q11 = st.radio("Set prior probability of q1?",["random", "yes"],key="5")
+        if number_q11=="yes":
+            number_q1 = st.slider("Choose value:",0.0,1.0,key="6")
+        else:
+            number_q1=np.random.random()
+        st.write("pr(q1)="+str(number_q1)[:6])
+    with col4:
+        number_p21 = st.radio("Set prior probability of p2?",["random", "yes"],key="7")
+        if number_p21=="yes":
+            number_p2 = st.slider("Choose value:",0.0,1.0,key="8")
+        else:
+            number_p2=np.random.random()
+        st.write("pr(p2)="+str(number_p2)[:6])
+    with col5:
+        number_q21 = st.radio("Set prior probability of q2?",["random", "yes"],key="9")
+        if number_q21=="yes":
+            number_q2 = st.slider("Choose value:",0.0,1.0,key="10")
+        else:
+            number_q2=np.random.random()
+        st.write("pr(q2)="+str(number_q2)[:6])
+if networktype == "common cause":
+    st.write("""assuming b<-a->c
+             \n
+             pr(a) = a,
+             pr(b|a)=p1,
+             pr(b|~a)=q1,
+             pr(c|a)=p2,
+             pr(c|~a)=q2""")
+    col1,col2,col3,col4,col5 = st.columns(5)
+    with col1:
+        number_a1 = st.radio("Set prior probability of a?",["random", "yes"],key="11")
+        if number_a1=="yes":
+            number_a = st.slider("Choose value:",0.0,1.0,key="12")
+        else:
+            number_a = np.random.random()
+        st.write("pr(a)="+str(number_a)[:6])
+    with col2:
+        number_p11 = st.radio("Set prior probability of p1?",["random", "yes"],key="13")
+        if number_p11=="yes":
+            number_p1 = st.slider("Choose value:",0.0,1.0,key="14")
+        else:
+            number_p1=np.random.random()
+        st.write("pr(p1)="+str(number_p1)[:6])
+    with col3:
+        number_q11 = st.radio("Set prior probability of q1?",["random", "yes"],key="15")
+        if number_q11=="yes":
+            number_q1 = st.slider("Choose value:",0.0,1.0,key="16")
+        else:
+            number_q1=np.random.random()
+        st.write("pr(q1)="+str(number_q1)[:6])
+    with col4:
+        number_p21 = st.radio("Set prior probability of p2?",["random", "yes"],key="17")
+        if number_p21=="yes":
+            number_p2 = st.slider("Choose value:",0.0,1.0,key="18")
+        else:
+            number_p2=np.random.random()
+        st.write("pr(p2)="+str(number_p2)[:6])
+    with col5:
+        number_q21 = st.radio("Set prior probability of q2?",["random", "yes"],key="19")
+        if number_q21=="yes":
+            number_q2 = st.slider("Choose value:",0.0,1.0,key="20")
+        else:
+            number_q2=np.random.random()
+        st.write("pr(q2)="+str(number_q2)[:6])
 
-st.write(""" This is a tool to update 2 variable-networks by minimizing some central f-divergences; written by Borut Trpin""")
-st.write(""" We assume a network defined by Pr(Rich), Pr(Old|Rich), Pr(Old|Poor)... """)
-         
-number_a1 = st.slider("Choose Pr(Rich):",0.0,1.0,key="1")
-number_p1 = st.slider("Choose Pr(Old|Rich):",0.0,1.0,key="2")
-number_q1 = st.slider("Choose Pr(Old|Poor):",0.0,1.0,key="3")
 
-number_a2 = st.radio("Set posterior Q(Rich)?",["no", "yes"],key="4")
-if number_a2=="yes":
-    number_a2 = st.slider("Choose value:",0.0,1.0,key="5")
-else:
-    number_a2=-1
-    
-number_p2 = st.radio("Set posterior Q(Old|Rich)?",["no", "yes"],key="6")
-if number_p2=="yes":
-    number_p2 = st.slider("Choose value:",0.0,1.0,key="7")
-else:
-    number_p2=-1
 
-number_q2 = st.radio("Set posterior Q(Old|Rich))?",["no", "yes"],key="8")
-if number_q2=="yes":
-    number_q2 = st.slider("Choose value:",0.0,1.0,key="10")
+if networktype == "collider":
+    st.write("""assuming a->c<-b
+             \n
+             pr(a) = a,
+             pr(b)=b,
+             pr(c|a,b)=p1,
+             pr(c|a,~b)=p2,
+             pr(c|~a,b)=p3,
+             pr(c|~a,~b)=p4""")
+    col1,col2,col3,col4,col5,col6 = st.columns(6)
+    with col1:
+        number_a1 = st.radio("Set prior probability of a?",["random", "yes"],key="21")
+        if number_a1=="yes":
+            number_a = st.slider("Choose value:",0.0,1.0,key="22")
+        else:
+            number_a = np.random.random()
+        st.write("pr(a)="+str(number_a)[:6])
+    with col2:
+        number_b1 = st.radio("Set prior probability of b?",["random", "yes"],key="23")
+        if number_b1=="yes":
+            number_b = st.slider("Choose value:",0.0,1.0,key="24")
+        else:
+            number_b=np.random.random()
+        st.write("pr(b)="+str(number_b)[:6])
+    with col3:
+        number_p11 = st.radio("Set prior probability of p1?",["random", "yes"],key="25")
+        if number_p11=="yes":
+            number_p1 = st.slider("Choose value:",0.0,1.0,key="26")
+        else:
+            number_p1=np.random.random()
+        st.write("pr(p1)="+str(number_p1)[:6])
+    with col4:
+        number_p21 = st.radio("Set prior probability of p2?",["random", "yes"],key="27")
+        if number_p21=="yes":
+            number_p2 = st.slider("Choose value:",0.0,1.0,key="28")
+        else:
+            number_p2=np.random.random()
+        st.write("pr(p2)="+str(number_p2)[:6])
+    with col5:
+        number_p31 = st.radio("Set prior probability of p3?",["random", "yes"],key="29")
+        if number_p31=="yes":
+            number_p3 = st.slider("Choose value:",0.0,1.0,key="30")
+        else:
+            number_p3=np.random.random()
+        st.write("pr(p3)="+str(number_p3)[:6])
+    with col6:
+        number_p41 = st.radio("Set prior probability of p4?",["random", "yes"],key="31")
+        if number_p41=="yes":
+            number_p4 = st.slider("Choose value:",0.0,1.0,key="32")
+        else:
+            number_p4=np.random.random()
+        st.write("pr(p4)="+str(number_p4)[:6])
+constraintz=[]
+col1a,col2a,col3a,col4a,col5a,col6a = st.columns(6)
+with col1a:
+    constraint_a1 = st.radio("Set posterior probability of a (constraint)?", ["no", "yes"],key="33")
+    if constraint_a1=="yes":
+        constraint_a= st.slider("Choose value:",0.0,1.0,key="34")
+        st.write("pr*(a)="+str(constraint_a)[:6])
+    else:
+        constraint_a=None
+constraintz.append(constraint_a)
+with col2a:
+    constraint_b1 = st.radio("Set posterior probability of b (constraint)?", ["no", "yes"],key="35")
+    if constraint_b1=="yes":
+        constraint_b= st.slider("Choose value:",0.0,1.0,key="36")
+        st.write("pr*(b)="+str(constraint_b)[:6])
+    else:
+        constraint_b=None
+constraintz.append(constraint_b)
+
+with col3a:
+    constraint_c1 = st.radio("Set posterior probability of c (constraint)?", ["no", "yes"],key="37")
+    if constraint_c1=="yes":
+        constraint_c= st.slider("Choose value:",0.0,1.0,key="38")
+        st.write("pr*(c)="+str(constraint_c)[:6])
+    else:
+        constraint_c=None
+constraintz.append(constraint_c)
+
+with col4a:
+    constraint_a_b1 = st.radio("Set posterior probability of b given a (constraint)?", ["no", "yes"],key="39")
+    if constraint_a_b1=="yes":
+        constraint_a_b= st.slider("Choose value:",0.0,1.0,key="40")
+        st.write("pr*(b|a)="+str(constraint_a_b)[:6])
+    else:
+        constraint_a_b=None
+constraintz.append(constraint_a_b)
+
+with col5a:
+    constraint_b_c1 = st.radio("Set posterior probability of c given b (constraint)?", ["no", "yes"],key="41")
+    if constraint_b_c1=="yes":
+        constraint_b_c= st.slider("Choose value:",0.0,1.0,key="42")
+        st.write("pr*(c|b)="+str(constraint_b_c)[:6])
+    else:
+        constraint_b_c=None
+constraintz.append(constraint_b_c)
+
+with col6a:
+    constraint_a_c1 = st.radio("Set posterior probability of c given a (constraint)?", ["no", "yes"],key="43")
+    if constraint_a_c1=="yes":
+        constraint_a_c= st.slider("Choose value:",0.0,1.0,key="44")
+        st.write("pr*(c|a)="+str(constraint_a_c)[:6])
+    else:
+        constraint_a_c=None
+constraintz.append(constraint_a_c)
+
+col1b,col2b,col3b = st.columns(3)
+with col1b:
+    printing1 = st.radio("Write out the results?", ["yes", "no"],key="45")
+with col2b:
+    plotting1 = st.radio("Plot the results?", ["yes", "no"],key="46")
+with col3b:
+    rounding = st.radio("Rounding of values?",["yes", "no"],key="round")
+    if rounding=="yes":
+        decimround = st.slider("Number of decimals:",2,8,key="roundnr")
+    else:
+        decimround=2
+
+if printing1=="yes":
+    printing=1
 else:
-    number_q2=-1
-    
+    printing=0
+if plotting1=="yes":
+    plotting=1
+else:
+    plotting=0
+
+
+if networktype=="random":
+    prior="rand"
+elif networktype=="common cause":
+    prior=commoncause_distrib(number_a,number_p1,number_q1,number_p2,number_q2)
+elif networktype=="chain":
+    prior=chain_distrib(number_a,number_p1,number_q1,number_p2,number_q2)
+elif networktype=="collider":
+    prior=collider_distrib(number_a,number_b,number_p1,number_p2,number_p3,number_p4)
+
+
 if st.button('Perform an update by minimizing f-divergence'):
     st.write('To repeat, click again')
     st.write("You can change any parameters above.")
-    update_by_minimization(distr_2(number_a1,number_p1,number_q1),[number_a2],[number_p2,number_q2],1)
-# with open('corinaExample.csv', 'r') as read_obj:
-
-#     # Return a reader object which will
-#     # iterate over lines in the given csvfile
-#     csv_reader = csv.reader(read_obj)
-
-#     # convert string to list
-#     list_of_csv = list(csv_reader)
-
-# aS=[float(i) for i in list_of_csv[2][1:]]
-# pS=[float(i) for i in list_of_csv[3][1:]]
-# qS=[float(i) for i in list_of_csv[4][1:]]
-
-# triples=[[a,p,q,a*p+(1-a)*q,a*p/(a*p+(1-a)*q)] for a,p,q in zip(aS,pS,qS) ]
-# distrs=[distr_2(triples[i][0],triples[i][1],triples[i][2]) for i in range(len(triples))]
-# combs=[i+j for i,j in zip(triples,distrs)]
-# priorParams=[i[:3] for i in triples[::4]]
-
-# priors=[]
-# j=0
-# for i in triples:
-#     if j%4==0:
-#         a=i[0]
-#         p=i[1]
-#         q=i[2]
-#         prior=distr_2(a,p,q)
-#         priors.append(prior)
-#     else:
-#         if i[0]!=a:
-#             unc=[i[0]]
-#         else:
-#             unc=[]
-#         if i[1]!=p:
-#             con=[i[1]]
-#         else:
-#             con=[-1]
-#         if i[2]!=q:
-#             con.append(i[2])
-#         else:
-#             con.append(-1)
-#         update_by_minimization(prior,unc,con,1)
-#     j+=1
-
-    
+    st.write("Random parameters will be randomized on every rerun.")
+    update_by_minimization(prior,constraintz,printing,plotting,rounding,decimround)
